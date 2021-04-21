@@ -33,4 +33,5 @@
     Python or C++
     Drone kit
     
-    Installation instruction is given in the file 'Installation.md'
+    Installation instruction are given in the file 'Installation.md'
+    Start instructions are given in the file 'Starting_Steps.md'
