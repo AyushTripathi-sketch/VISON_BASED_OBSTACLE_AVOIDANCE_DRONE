@@ -1,0 +1,12 @@
+<launch>
+
+<node pkg="tf" type="static_transform_publisher" name="base_camoptical" args="0 0 0 0 0 0 base_link camera_link_optical 50" />
+<node pkg="tf" type="static_transform_publisher" name="map_base" args="0 0 0 0 0 0 map base_link 50" />
+<node pkg="tf" type="static_transform_publisher" name="odom_map" args="0 0 0 0 0 0 map odom 50" />
+<node pkg="tf" type="static_transform_publisher" name="cdf_map" args="0 0 0 0 0 0 map camera_depth_frame 50" />
+<node pkg="tf" type="static_transform_publisher" name="cdo_map" args="0 0 0 0 0 0 map camera_depth_optical 50" />
+<node pkg="tf" type="static_transform_publisher" name="cl_map" args="0 0 0 0 0 0 map camera_link 50" />
+<node pkg="tf" type="static_transform_publisher" name="crf_map" args="0 0 0 0 0 0 map camera_rgb_frame 50" />
+<node pkg="tf" type="static_transform_publisher" name="crof_map" args="0 0 0 0 0 0 map camera_rgb_optical_frame 50" />
+
+</launch>

@@ -1,0 +1,5 @@
+<launch>
+	<node name="main_controller_4_duplicate" pkg="interiit21" type="main_controller_4_duplicate.py" output="screen"/>
+	<node name="main_executer_4" pkg="interiit21" type="main_executer_4.py" output="screen"/>
+
+</launch>

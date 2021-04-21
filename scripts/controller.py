@@ -16,8 +16,7 @@ import time
 import math
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float32
-# from vitarana_drone.msg import *
-# from pid_tune.msg import PidTune
+from std_msgs.msg import String
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float32
 import rospy
@@ -34,15 +33,18 @@ import time
 
 
 
+ini_lat =0
+ini_long = 0
+ini_alt=0
 def lat_to_x(input_latitude):
-    return 110692.0702932625*(input_latitude+35.3632591)
+    return 110692.0702932625*(input_latitude-(-35.3632474))
 def long_to_x(input_longitude):
-    return -105292.0089353767*(input_longitude-149.1653452)
+    return -105292.0089353767*(input_longitude-149.1653672)
 
 def x_to_lat(input_x):
-    return input_x/110692.0702932625 - 35.3632591
+    return input_x/110692.0702932625 + (-35.3632474)
 def x_to_long(input_x):
-    return input_x/(-105292.0089353767) + 149.1653452
+    return input_x/(-105292.0089353767) + 149.1653672
 
 offset_x  = 50
 offset_y = 0
@@ -67,7 +69,7 @@ def astar(maze,start,end):
         vis[temp[0]][temp[1]]=1
         if temp[0] == end[0] and temp[1] == end[1]:
             break
-        if temp[0]-1>=0 and insertq[temp[0]-1][temp[1]]==0 and maze[temp[0]-1][temp[1]]==0:
+        if temp[0]-1>=36 and insertq[temp[0]-1][temp[1]]==0 and maze[temp[0]-1][temp[1]]==0:
             insertq[temp[0]-1][temp[1]]=1
             q.append([temp[0]-1,temp[1]])
             parent[temp[0]-1][temp[1]][0]=temp[0]
@@ -82,30 +84,30 @@ def astar(maze,start,end):
             q.append([temp[0],temp[1]-1])
             parent[temp[0]][temp[1]-1][0]=temp[0]
             parent[temp[0]][temp[1]-1][1]=temp[1]
-        if temp[0]+1<=100 and insertq[temp[0]+1][temp[1]]==0 and maze[temp[0]+1][temp[1]]==0:
+        if temp[0]+1<=64 and insertq[temp[0]+1][temp[1]]==0 and maze[temp[0]+1][temp[1]]==0:
             insertq[temp[0]+1][temp[1]]=1
             q.append([temp[0]+1,temp[1]])
             parent[temp[0]+1][temp[1]][0]=temp[0]
             parent[temp[0]+1][temp[1]][1]=temp[1]
-        if temp[0]+1<=100 and temp[1]+1<=100 and insertq[temp[0]+1][temp[1]+1]==0 and maze[temp[0]+1][temp[1]+1]==0:
+        if temp[0]+1<=64 and temp[1]+1<=100 and insertq[temp[0]+1][temp[1]+1]==0 and maze[temp[0]+1][temp[1]+1]==0:
             insertq[temp[0]+1][temp[1]+1]=1
             q.append([temp[0]+1,temp[1]+1])
             parent[temp[0]+1][temp[1]+1][0]=temp[0]
             parent[temp[0]+1][temp[1]+1][1]=temp[1]
 
-        if temp[0]+1<=100 and temp[1]-1>=0 and insertq[temp[0]+1][temp[1]-1]==0 and maze[temp[0]+1][temp[1]-1]==0:
+        if temp[0]+1<=64 and temp[1]-1>=0 and insertq[temp[0]+1][temp[1]-1]==0 and maze[temp[0]+1][temp[1]-1]==0:
             insertq[temp[0]+1][temp[1]-1]=1
             q.append([temp[0]+1,temp[1]-1])
             parent[temp[0]+1][temp[1]-1][0]=temp[0]
             parent[temp[0]+1][temp[1]-1][1]=temp[1]
 
-        if temp[0]-1>=0 and temp[1]+1<=100 and insertq[temp[0]-1][temp[1]+1]==0 and maze[temp[0]-1][temp[1]+1]==0:
+        if temp[0]-1>=36 and temp[1]+1<=100 and insertq[temp[0]-1][temp[1]+1]==0 and maze[temp[0]-1][temp[1]+1]==0:
             insertq[temp[0]-1][temp[1]+1]=1
             q.append([temp[0]-1,temp[1]+1])
             parent[temp[0]-1][temp[1]+1][0]=temp[0]
             parent[temp[0]-1][temp[1]+1][1]=temp[1]
 
-        if temp[0]-1>=0 and temp[1]-1>=0 and insertq[temp[0]-1][temp[1]-1]==0 and maze[temp[0]-1][temp[1]-1]==0:
+        if temp[0]-1>=36 and temp[1]-1>=0 and insertq[temp[0]-1][temp[1]-1]==0 and maze[temp[0]-1][temp[1]-1]==0:
             insertq[temp[0]-1][temp[1]-1]=1
             q.append([temp[0]-1,temp[1]-1])
             parent[temp[0]-1][temp[1]-1][0]=temp[0]
@@ -132,6 +134,8 @@ def operate_astar(start,end,drone,maze,obs):
     global factor
     print(start)
     print(end)
+    end_x = end[0]
+    end_y = end[1]
     start[0] = (int)(start[0]/factor)+50
     start[1] = (int)(start[1]/factor)
     final_dest = end
@@ -141,8 +145,8 @@ def operate_astar(start,end,drone,maze,obs):
     print(start)
     print(end)
     for p in obs:
-        if abs(p[1])<1:
-            cur_x = (int)((drone[0]+p[0])/factor)+50
+        if abs(p[0])<1:
+            cur_x = (int)((drone[0]+p[1])/factor)+50
             cur_y = (int)((drone[1]+p[2])/factor)
             k1 = -1
             while k1<=1:
@@ -151,9 +155,7 @@ def operate_astar(start,end,drone,maze,obs):
                     maze[cur_x+k1][cur_y+k2]=1
                     k2=k2+1
                 k1=k1+1
-            # maze[(int)((drone[0]+p[0])/factor)+50][(int)((drone[1]+p[2])/factor)]=1
-            # maze[(int)((drone[0]+p[0])/factor)+50+1][(int)((drone[1]+p[2])/factor)]=1
-            # maze[(int)((drone[0]+p[0])/factor)+50-1][(int)((drone[1]+p[2])/factor)]=1
+            
 
     print("PRINTING MAZE")
     for i in range(100):
@@ -173,7 +175,7 @@ def operate_astar(start,end,drone,maze,obs):
     print(len(path))
     print(final_dest)
     if(len(path)<=1):
-        return [factor*(final_dest[0]-50),factor*final_dest[1]]
+        return [end_x,end_y]
     else:
         return [factor*(path[1][0]-50) , factor*path[1][1]]
     
@@ -182,7 +184,7 @@ def operate_astar(start,end,drone,maze,obs):
 
 
 class Iris():
-    """docstring for Edrone"""
+    """docstring for Drone"""
     def __init__(self):
         rospy.init_node('position_controller')
         self.alt_pub = rospy.Publisher('/Thrust', Float32, queue_size=10)
@@ -190,33 +192,48 @@ class Iris():
         self.long_pub = rospy.Publisher('/Pitch', Float32, queue_size=10)
         rospy.Subscriber("/mavros/global_position/global", NavSatFix, self.PoseCallBack)
         rospy.Subscriber('/depth_camera/depth/points', PointCloud2, self.callback_pointcloud)
+        rospy.Subscriber('/err_x_val',Float32,self.assign_err_x)
+        rospy.Subscriber('/err_y_val',Float32,self.assign_err_y)
+        rospy.Subscriber('/bool_pub',Float32,self.check_detect)
+        self.msg_pub = rospy.Publisher('/Aruco/message',String, queue_size = 10)
+        self.def_msg = 'Marker ID:none, looking for marker'
         self.postn = [0,0,0]
-        self.set_postn = [0,26,3]
+        self.set_postn = [1,36,3]
         self.thrust =0
         self.roll =0
         self.pitch=0
+        self.chk=0
         self.gen = [[0,0,0]]
+        self.err_x = 0
+        self.err_y = 0
+        self.check_marker =1
+
+    def assign_err_x(self,data):
+        self.err_x = data.data
+    def assign_err_y(self,data):
+        self.err_y = data.data
+    def check_detect(self,data):
+        self.check_marker = data.data
 
     def callback_pointcloud(self,data):
         assert isinstance(data, PointCloud2)
         self.gen = point_cloud2.read_points(data, field_names=("x", "y", "z"), skip_nans=True)
-        time.sleep(1)
-    # print(data.height,data.width)
-    # assert isinstance(data, PointCloud2)
-    # self.gen = point_cloud2.read_points(data, field_names=("x", "y", "z"), skip_nans=True)
-    # time.sleep(1)
-    # # print type(gen)
-    # # for p in gen:
-    # #     print(p)
-    # #     print " x : %.3f  y: %.3f  z: %.3f" %(p[0],p[1],p[2])
-        
+        time.sleep(1)      
 
 
 
     def PoseCallBack(self,msg):
+        global ini_long, ini_lat, ini_alt
+        if(self.chk==0):
+            ini_lat = msg.latitude
+            ini_long = msg.longitude
+            ini_alt = msg.altitude            
+            self.chk =1
         self.postn[0] = lat_to_x(msg.latitude)
         self.postn[1] = long_to_x(msg.longitude)
-        self.postn[2] = msg.altitude - 603.35877
+        self.postn[2] = msg.altitude - 603.358821
+
+        
 
 
     def guider(self):
@@ -231,9 +248,22 @@ class Iris():
         self.next_long = 0
         self.condition = 0
         self.arr = [[0,0,0]]
+        self.check_val10 = 1
+        self.check_val11=0
+        self.err = 0.5
         while(True):
+            if self.postn[2]>1 and self.check_val10==1 and self.chk == 1:
+                self.err = 2.5
+            if self.check_marker == 1 and self.check_val10 == 0:
+                self.set_postn[0] = self.next_lat+self.err_x + 0.5
+                self.set_postn[1] = self.next_long-self.err_y 
+                self.check_val10=1
+            if self.check_marker == 1 and abs(self.set_postn[0] - self.postn[0])<1 and abs(self.set_postn[1] - self.postn[1])<1 and self.check_val10==1:
+                self.set_postn[2] = 0
+                self.check_val11=1
             global maze
-            if(abs(self.next_lat-self.postn[0])<2 and abs(self.next_long - self.postn[1])<2):
+            if(abs(self.next_lat-self.postn[0])<self.err and abs(self.next_long - self.postn[1])<self.err):
+                print("INSIDE IF")
                 time.sleep(3)
                 val = operate_astar([self.next_lat,self.next_long],[self.set_postn[0],self.set_postn[1]],[self.postn[0],self.postn[1]],maze,self.gen)
                 self.next_lat = val[0]
@@ -246,6 +276,10 @@ class Iris():
             print("PUBLISHED->")
             print(self.next_lat,self.next_long)
             print(self.set_postn)
+            if self.postn[2] <= 0.4 and self.check_val11==1:
+                self.def_msg = "Marker ID : 0,Landed"
+            self.msg_pub.publish(self.def_msg)
+            print(self.def_msg)
 
             
             
@@ -262,6 +296,8 @@ class Iris():
 
 if __name__ == "__main__":
     try:
+        time.sleep(2)
+        print('controller start')
         publish_cmd = Iris()
         time.sleep(1)
         publish_cmd.guider()
