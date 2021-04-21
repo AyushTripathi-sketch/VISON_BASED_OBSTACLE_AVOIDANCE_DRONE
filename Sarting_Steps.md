@@ -1,4 +1,4 @@
-﻿# Installation 
+# Installation 
 ## ROS
 You can find these installation instructions [here](wiki.ros.org/melodic/Installation/Ubuntu).
 #### Setup your sources.list
